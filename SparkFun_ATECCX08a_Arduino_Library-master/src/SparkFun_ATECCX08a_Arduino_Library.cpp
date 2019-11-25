@@ -982,31 +982,12 @@ boolean ATECCX08A::ECDH(uint8_t *data, uint8_t mode, uint16_t slot)
   delay(100); // time for IC to process command and exectute
 
   // Now let's read back from the IC.
-  if(receiveResponseData(35) == false) return false;  
+  if(receiveResponseData(4) == false) return false;  
   idleMode();
-  boolean checkCountResult = checkCount();
-  boolean checkCrcResult = checkCrc();
-  
-  if(checkCountResult && checkCrcResult) // check that it was a good message
-  {  
-    // we don't need the count value (which is currently the first byte of the inputBuffer)
-    for (int i = 0 ; i < 32 ; i++) // for loop through to grab all but the first position (which is "count" of the message)
-    {
-      ECDH_secret[i] = inputBuffer[i + 1];
-    }
-  
-  Serial.println();
-    Serial.println("uint8_t ECDH_secret[32] = {");
-    for (int i = 0; i < sizeof(ECDH_secret) ; i++)
-    {
-    Serial.print("0x");
-    if((ECDH_secret[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
-      Serial.print(ECDH_secret[i], HEX);
-      if(i != 31) Serial.print(", ");
-    if((31-i) % 16 == 0) Serial.println();
-    }
-  Serial.println("};");
-  return true;
+  if(checkCount() == false) return false;
+  if(checkCrc() == false) return false;
+  if(inputBuffer[1] == 0x00) {
+  Serial.println("Succesfully Calculated ECDH Shared Secret and Loaded into TempKey");
   }
   else return false;
 }
@@ -1074,8 +1055,8 @@ boolean ATECCX08A::writeProvisionConfig()
 
   // set slot config on slot 10 and 11 
   //slotconfig for slot 10: is secret, not encryptread, no usage limitation, can be used by all commands, write config never
-  //slotconfig for slot 11: is secret, not encryptread, no usage limitation, can be used by all commands, write config always
-  uint8_t data4[] = {0x00, 0x20, 0x00, 0x00}; 
+  //slotconfig for slot 11: is secret, not encryptread, no usage limitation, can be used by all commands, write config never
+  uint8_t data4[] = {0x00, 0x20, 0x00, 0x20}; 
   result4 = write(ZONE_CONFIG, (40 / 4), data4, 4);
 
 
