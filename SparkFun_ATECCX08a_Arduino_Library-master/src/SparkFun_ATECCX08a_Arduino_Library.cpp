@@ -256,6 +256,31 @@ boolean ATECCX08A::lock(uint8_t zone)
 
 /** \brief
 
+	lockDataSlot(byte zone)
+	
+	This function sends the LOCK Command using the argument zone as parameter 1, 
+	and listens for success response (0x00).
+*/
+
+boolean ATECCX08A::lockDataSlot(int slot)
+{
+  uint8_t zone = (slot << 2) | 0b10000010;
+  sendCommand(COMMAND_OPCODE_LOCK, zone, 0x0000);
+
+  delay(32); // time for IC to process command and exectute
+  
+  // Now let's read back from the IC and see if it reports back good things.
+  countGlobal = 0; 
+  if(receiveResponseData(4) == false) return false;
+  idleMode();
+  if(checkCount() == false) return false;
+  if(checkCrc() == false) return false;
+  if(inputBuffer[1] == 0x00) return true;   // If we hear a "0x00", that means it had a successful lock
+  else return false;
+}
+
+/** \brief
+
 	updateRandom32Bytes(boolean debug)
 	
     This function pulls a complete random number (all 32 bytes)

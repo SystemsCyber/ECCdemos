@@ -125,6 +125,7 @@ class ATECCX08A {
 	boolean lockConfig(); // note, this PERMINANTLY disables changes to config zone - including changing the I2C address!
 	boolean lockDataAndOTP();
 	boolean lockDataSlot0();
+	boolean lockDataSlot(int slot);
 	boolean lock(uint8_t zone);
 	
 	// Random array and fuctions
