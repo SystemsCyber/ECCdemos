@@ -26,3 +26,8 @@ public_key = b''
 for i in range(0,len(public_key_hex),2):
     public_key += struct.pack("B",int(public_key_hex[i:i+2],16))
 print(public_key)
+# print(public_key_hex)
+# for i in range(len(public_key_hex)):
+#     print("0x"+public_key_hex[i:i+2],end=' ')
+#     if i % 32 == 31:
+#         print("")
