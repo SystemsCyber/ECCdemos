@@ -1,16 +1,38 @@
+import base64
+import json
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import serialization
-import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import utils
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 print("ECDH----------------------------------------------------------------------------------")
 print("--------------------------------------------------------------------------------------")
 #generate server ECC key pair
 server_private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
 server_public_key = (server_private_key.public_key())
+
+server_pem_key = server_private_key.private_bytes(
+                        encoding = serialization.Encoding.PEM,
+                        format = serialization.PrivateFormat.PKCS8,
+                        encryption_algorithm = serialization.NoEncryption())
+print(server_pem_key.decode('utf-8'))
+
+server_public_key = server_private_key.public_key()
+server_public_key_bytes = server_public_key.public_bytes(
+    encoding = serialization.Encoding.X962,
+    format = serialization.PublicFormat.UncompressedPoint)
+print('server_public_key_bytes')
+print(server_public_key_bytes.hex().upper())
+print(len(server_public_key_bytes[1:]))
+
+stored_key = base64.b64encode(server_public_key_bytes)
+print(stored_key)
+# load the device's public key which was a string representation of the key
+device_bytes = base64.b64decode(stored_key)
+device_public_key = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(),device_bytes)
 
 #Serializing the server public key
 serialized_public = server_public_key.public_bytes(
@@ -28,7 +50,8 @@ public_key_2 = public_key_hex[64:128]
 #print(public_key_2)
 public_key_list = []
 for k in range(64):
-	public_key_list.append('0x'+public_key_hex[2*k]+public_key_hex[2*k+1])
+
+public_key_list.append('0x'+public_key_hex[2*k]+public_key_hex[2*k+1])
 
 print("Server public Key is:")
 for i, elem in enumerate(public_key_list):
@@ -68,7 +91,17 @@ teensy_public_key = serialization.load_pem_public_key(serialized_public_teensy,b
 #Derive shared secret
 shared_secret = server_private_key.exchange(ec.ECDH(),teensy_public_key)
 print("Shared secret:",shared_secret.hex())
+print(len(shared_secret))
 
+session_key = base64.b64decode("7lv9V/0qYzgKdCZJOo3YFQ==")
+print("encrypted Key: {}".format(session_key))
+print(len(session_key))
+cipher = Cipher(algorithms.AES(shared_secret), modes.ECB(), backend=default_backend())
+decryptor = cipher.decryptor()
+clear_key = decryptor.update(session_key) + decryptor.finalize()
+print("Clear Key: {}".format(clear_key))
+print(len(clear_key))
+print("Clear Key JSON: {}".format(json.dumps(base64.b64encode(clear_key).decode('ascii'))))
 
 
 print("")
