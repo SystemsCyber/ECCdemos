@@ -6,8 +6,8 @@ import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import utils
 
-print("ECDH----------------------------------------------------------------------------------")
-print("--------------------------------------------------------------------------------------")
+#print("ECDH----------------------------------------------------------------------------------")
+#print("--------------------------------------------------------------------------------------")
 #generate server ECC key pair
 server_private_key = ec.generate_private_key(ec.SECP256R1(), default_backend())
 server_public_key = (server_private_key.public_key())
@@ -52,19 +52,19 @@ serialized_public_teensy = bytes(public_key_teensy_string,'ascii')
 #Print Teensy public key
 public_key_hex_teensy = ((base64.b64decode(serialized_public_teensy.splitlines()[1]).hex()) + \
 					(base64.b64decode(serialized_public_teensy.splitlines()[2]).hex()))[54:]
-print("Teensy Public Key:",public_key_hex_teensy,"Length:", int(len(public_key_hex_teensy)/2),'\n')
+#print("Teensy Public Key:",public_key_hex_teensy,"Length:", int(len(public_key_hex_teensy)/2),'\n')
 
 #Load teensy public key
 teensy_public_key = serialization.load_pem_public_key(serialized_public_teensy,backend=default_backend())
 
 #Derive shared secret
 shared_secret = server_private_key.exchange(ec.ECDH(),teensy_public_key)
-print("Shared secret:",shared_secret.hex())
+#print("Shared secret:",shared_secret.hex())
 
 
 
 
-print("")
+#print("")
 print("Signing Data--------------------------------------------------------------------------")
 print("--------------------------------------------------------------------------------------")
 #data to be signed
@@ -72,6 +72,7 @@ data_hex = [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x
 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F]
 data = bytes(data_hex)
 
+print("Message:",data.hex().upper())
 
 signature1 = server_private_key.sign(data,ec.ECDSA(hashes.SHA256()))
 signature1_hex = utils.decode_dss_signature(signature1)
@@ -89,4 +90,5 @@ for i in range(0,len(string2),2):
 pretty_print_1 = ", ".join(["0x{:02X}".format(b) for b in int_list1])
 pretty_print_2 = ", ".join(["0x{:02X}".format(b) for b in int_list2])
 print("First 32 Bytes of Signature: ",pretty_print_1)
+print()
 print("Second 32 Bytes of Signature: ",pretty_print_2)
